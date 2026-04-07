@@ -16,6 +16,7 @@ from .utils import echo
 
 if t.TYPE_CHECKING:
     import typing_extensions as te
+    from .shell_completion import CompletionItem
 
     P = te.ParamSpec("P")
 
@@ -322,7 +323,14 @@ def _param_memo(f: t.Callable[..., t.Any], param: Parameter) -> None:
 
 
 def argument(
-    *param_decls: str, cls: type[Argument] | None = None, **attrs: t.Any
+    *param_decls: str,
+    cls: type[Argument] | None = None,
+    # Explicitly type shell_complete to match Option's typing
+    shell_complete: t.Callable[
+        [Context, "Parameter", str], list["CompletionItem"] | list[str]
+    ]
+    | None = None,
+    **attrs: t.Any,
 ) -> t.Callable[[FC], FC]:
     """Attaches an argument to the command.  All positional arguments are
     passed as parameter declarations to :class:`Argument`; all keyword
@@ -343,6 +351,10 @@ def argument(
         cls = Argument
 
     def decorator(f: FC) -> FC:
+        # Extract shell_complete from kwargs and pass it explicitly
+        # to match Option's typing behavior
+        if shell_complete is not None:
+            attrs = {**attrs, 'shell_complete': shell_complete}
         _param_memo(f, cls(param_decls, **attrs))
         return f
 
