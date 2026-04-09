@@ -473,13 +473,30 @@ def version_option(
         del frame
 
         if f_globals is not None:
-            package_name = f_globals.get("__name__")
+            module_name = f_globals.get("__name__")
 
-            if package_name == "__main__":
-                package_name = f_globals.get("__package__")
+            if module_name == "__main__":
+                module_name = f_globals.get("__package__")
 
-            if package_name:
-                package_name = package_name.partition(".")[0]
+            if module_name:
+                module_name = module_name.partition(".")[0]
+
+            # Try to convert module name to package (distribution) name.
+            # Module name and package name are not always equivalent
+            # (e.g., "PIL" module is from "pillow" package).
+            # Use packages_distributions() which is available in Python 3.10+.
+            if module_name:
+                try:
+                    import importlib.metadata
+
+                    packages_dist = importlib.metadata.packages_distributions()
+                    for pkg_name, modules in packages_dist.items():
+                        if module_name in modules:
+                            package_name = pkg_name
+                            break
+                except Exception:
+                    # Fall back to using module name directly
+                    package_name = module_name
 
     def callback(ctx: Context, param: Parameter, value: bool) -> None:
         if not value or ctx.resilient_parsing:
