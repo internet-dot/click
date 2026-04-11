@@ -559,3 +559,35 @@ def test_files_closed(runner) -> None:
             assert not current_warnings, "There should be no warnings to start"
             _get_completions(cli, args=[], incomplete="")
             assert not current_warnings, "There should be no warnings after either"
+
+
+def test_default_callback_not_called_during_completion():
+    """Test that callable defaults are not invoked during shell completion.
+    
+    When resilient_parsing is enabled (during tab-completion), default callbacks
+    should not be called to avoid side effects.
+    """
+    import functools
+    
+    callback_called = []
+    
+    def expensive_default():
+        callback_called.append(True)
+        return "default_value"
+    
+    cli = Command(
+        "cli",
+        add_help_option=False,
+        params=[
+            Option(["-o", "--option"], default=expensive_default),
+        ],
+    )
+    
+    # Clear any calls from initialization
+    callback_called.clear()
+    
+    # During completion, callback should NOT be called
+    _get_words(cli, [], "")
+    
+    # Verify callback was NOT invoked during completion
+    assert callback_called == [], f"Callback was called {len(callback_called)} times during completion"
