@@ -708,7 +708,7 @@ class Context:
         if self.default_map is not None:
             value = self.default_map.get(name)
 
-            if call and callable(value):
+            if call and callable(value) and not self.resilient_parsing:
                 return value()
 
             return value
@@ -2286,7 +2286,7 @@ class Parameter:
         ):
             value = self.default
 
-        if call and callable(value):
+        if call and callable(value) and not ctx.resilient_parsing:
             value = value()
 
         return value
@@ -2899,7 +2899,7 @@ class Option(Parameter):
         # https://github.com/pallets/click/issues/3121
         if value is True and self.is_flag:
             value = self.flag_value
-        elif call and callable(value):
+        elif call and callable(value) and not ctx.resilient_parsing:
             value = value()
 
         return value
