@@ -2440,7 +2440,7 @@ class Parameter:
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)
 
-        if self.callback is not None:
+        if self.callback is not None and not ctx.resilient_parsing:
             # Legacy case: UNSET is not exposed directly to the callback, but converted
             # to None.
             if value is UNSET:
@@ -3326,7 +3326,7 @@ class Option(Parameter):
         if self.is_flag and not self.required and self.is_bool_flag and value is UNSET:
             value = False
 
-            if self.callback is not None:
+            if self.callback is not None and not ctx.resilient_parsing:
                 value = self.callback(ctx, self, value)
 
             return value
