@@ -2323,7 +2323,7 @@ class Parameter:
                 value = envvar_value
                 source = ParameterSource.ENVIRONMENT
 
-        if value is UNSET:
+        if value is UNSET and not ctx.resilient_parsing:
             default_map_value = ctx.lookup_default(self.name)  # type: ignore[arg-type]
             if default_map_value is not None or (
                 ctx.default_map is not None and self.name in ctx.default_map
@@ -2331,7 +2331,7 @@ class Parameter:
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
 
-        if value is UNSET:
+        if value is UNSET and not ctx.resilient_parsing:
             default_value = self.get_default(ctx)
             if default_value is not UNSET:
                 value = default_value
