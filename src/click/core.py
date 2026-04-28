@@ -2313,7 +2313,7 @@ class Parameter:
         if value is None and not ctx._default_map_has(name):
             value = self.default
 
-        if call and callable(value):
+        if call and callable(value) and not ctx.resilient_parsing:
             value = value()
 
         return value
