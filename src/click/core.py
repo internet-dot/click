@@ -2307,6 +2307,8 @@ class Parameter(ABC):
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
         """
+        if ctx.resilient_parsing:
+            return None
         value = ctx.lookup_default(self.name, call=False)
 
         if value is None and not ctx._default_map_has(self.name):
