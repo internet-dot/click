@@ -2361,7 +2361,11 @@ class Parameter(ABC):
                     value = self.type.split_envvar_value(value)
 
         if value is UNSET:
-            default_value = self.get_default(ctx)
+            # Don't invoke default callbacks during resilient parsing (completion)
+            if ctx is not None and ctx.resilient_parsing:
+                default_value = self.get_default(ctx, call=False)
+            else:
+                default_value = self.get_default(ctx)
             if default_value is not UNSET:
                 value = default_value
                 source = ParameterSource.DEFAULT
