@@ -480,6 +480,13 @@ class _OptionParser:
         try:
             self._match_long_opt(norm_long_opt, explicit_value, state)
         except NoSuchOption:
+            # If the option string starts with a known long option, it's likely
+            # a typo on that option (e.g., -dbgwrong when -dbg exists). Report
+            # the full option string instead of falling back to short option parsing.
+            for lo in self._long_opt:
+                if norm_long_opt.startswith(lo) and len(norm_long_opt) > len(lo):
+                    raise NoSuchOption(long_opt, possibilities=self._long_opt, ctx=self.ctx)
+
             # At this point the long option matching failed, and we need
             # to try with short options.  However there is a special rule
             # which says, that if we have a two character options prefix
