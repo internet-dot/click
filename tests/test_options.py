@@ -160,6 +160,39 @@ def test_suggest_possible_options(runner, value, expect):
     assert expect in result.output
 
 
+def test_multichar_short_option_with_extra_chars(runner):
+    """Test that multichar short options are parsed correctly when extra
+    characters are appended. This addresses issue #2779 where "-dbgwrong"
+    produced confusing error "No such option: -d" instead of recognizing
+    "-dbg" as the option.
+
+    When the option is a flag, extra chars produce a clear error about the
+    option not taking a value, mentioning the correct option name.
+    When the option takes a value, the extra chars are treated as the value.
+    """
+    @click.command()
+    @click.option("-dbg", "--debug", is_flag=True, help="Debug mode")
+    def cli_flag(debug):
+        click.echo(f"debug={debug}")
+
+    # Flag with extra chars: should error about the option not taking a value
+    result = runner.invoke(cli_flag, ["-dbgwrong"])
+    assert result.exit_code != 0
+    assert "-dbg" in result.output
+    # The error should not say '-d' which was the confusing old message
+    assert "No such option: '-d'" not in result.output
+
+    @click.command()
+    @click.option("-dbg", "--debug", type=click.STRING, help="Debug path")
+    def cli_value(debug):
+        click.echo(f"debug={debug}")
+
+    # Value-taking option: extra chars become the value
+    result = runner.invoke(cli_value, ["-dbgwrong"])
+    assert result.exit_code == 0
+    assert result.output.strip() == "debug=wrong"
+
+
 def test_multiple_required(runner):
     @click.command()
     @click.option("-m", "--message", multiple=True, required=True)

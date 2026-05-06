@@ -487,6 +487,16 @@ class _OptionParser:
             # short option code and will instead raise the no option
             # error.
             if arg[:2] not in self._opt_prefixes:
+                # Check if a shorter accumulated prefix of the arg is a known long option.
+                # This handles cases like '-dbgwrong' where '-dbg' is a valid option
+                # and 'wrong' should be its value, but '-dbgwrong' itself isn't registered.
+                for i in range(len(arg) - 1, 1, -1):
+                    prefix = arg[:i]
+                    if prefix in self._long_opt:
+                        remainder = arg[i:]
+                        self._match_long_opt(prefix, remainder, state)
+                        return
+                # No accumulated prefix matched; fall back to short-opt parsing
                 self._match_short_opt(arg, state)
                 return
 
